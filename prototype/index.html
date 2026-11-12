@@ -23,6 +23,13 @@ header.top p{margin:0;color:var(--mut);font-size:13px}
 .ctrl button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13.5px;cursor:pointer}
 .ctrl button:hover{border-color:var(--ink)}
 .ctrl label{font-size:13px;margin-left:8px;cursor:pointer}
+.ctrl.lv{margin-top:6px}
+.ctrl.lv button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.promise{border-left:4px solid var(--ink);background:#faf9f5;padding:8px 10px;font-size:14px;margin-bottom:8px}
+.risk{border-left:4px solid var(--red);background:var(--red-b);padding:8px 10px;font-size:13.5px}
+.risk.okk{border-left-color:var(--ok);background:var(--ok-b)}
+tr.cur td{background:#fffaf0}
+.note{align-self:stretch;border:1.5px dashed var(--red);background:#fff7f6;color:var(--red);border-radius:10px;padding:8px 10px;font-size:12.5px}
 main{display:grid;grid-template-columns:400px 1fr;gap:22px;padding:18px 24px 28px;max-width:1320px}
 @media (max-width:900px){main{grid-template-columns:1fr;padding:16px}}
 
@@ -135,6 +142,12 @@ th{color:var(--mut);font-weight:600}
     <button data-run="reset">↺ Làm lại</button>
     <label><input type="checkbox" id="showN" checked> Hiện số chú thích [1]–[6]</label>
   </div>
+  <div class="ctrl lv">
+    <span>Mức tự chủ của <code>goi_y_thuoc_dieu_tri_otc</code> (tool khó xếp nhất, §4):</span>
+    <button data-lv="auto">Tự làm — gửi thẻ thuốc ngay</button>
+    <button data-lv="ask" class="on">Cần người duyệt — sàng lọc 1 chạm ✓ nhóm chọn</button>
+    <button data-lv="no">Cấm — mọi câu thuốc qua dược sĩ</button>
+  </div>
 </header>
 
 <main id="root">
@@ -173,13 +186,19 @@ th{color:var(--mut);font-weight:600}
     </div>
 
     <div class="panel">
+      <h2>Mức đang chọn cho <code>goi_y_thuoc_dieu_tri_otc</code></h2>
+      <div class="promise" id="promise"></div>
+      <div class="risk" id="risk"></div>
+    </div>
+
+    <div class="panel">
       <h2>Mức tự chủ của tool (theo §4)</h2>
       <table>
         <tr><th>Tool</th><th>Mức</th><th>Trên màn hình trông thế nào</th></tr>
         <tr><td><code>khuyen_di_kham</code></td><td><span class="pill p-auto">Tự làm</span></td><td>Có dấu hiệu đỏ → cảnh báo đỏ và nút 115 ở tin trả lời đầu tiên; có nút đính chính "Tôi gõ nhầm" (vẫn qua dược sĩ, không mở lại giỏ hàng)</td></tr>
         <tr><td><code>chuyen_duoc_si</code></td><td><span class="pill p-auto">Tự làm</span></td><td>Tự chuyển kèm tóm tắt; câu "đã chuyển" chỉ hiện <b>sau khi</b> tool trả kết quả. Ca đỏ: chạy song song với 115, không thay cho 115</td></tr>
         <tr><td><code>goi_y_vat_tu_y_te</code> <small>(tách từ goi_y_san_pham)</small></td><td><span class="pill p-auto">Tự làm</span></td><td>Nước muối, nhiệt kế, khẩu trang… gợi ý ngay, không sàng lọc</td></tr>
-        <tr><td><code>goi_y_thuoc_dieu_tri_otc</code> <small>(tách từ goi_y_san_pham)</small></td><td><span class="pill p-ask">Cần người duyệt</span></td><td>Bị khoá tới khi khách bấm đủ 3 ý sàng lọc [5]; nhóm nguy cơ → không có thẻ, chuyển dược sĩ; khách tự bấm Đặt và xác nhận lại</td></tr>
+        <tr id="rowOtc" class="cur"><td><code>goi_y_thuoc_dieu_tri_otc</code> <small>(tách từ goi_y_san_pham)</small></td><td id="pillOtc"><span class="pill p-ask">Cần người duyệt</span></td><td id="descOtc">Bị khoá tới khi khách bấm đủ 3 ý sàng lọc [5]; nhóm nguy cơ → không có thẻ, chuyển dược sĩ; khách tự bấm Đặt và xác nhận lại</td></tr>
         <tr><td><code>luu_ghi_chu_suc_khoe</code></td><td><span class="pill p-ask">Cần khách đồng ý</span></td><td>Ô đồng ý [6] mặc định <b>không tick</b>; không tick = không lưu</td></tr>
         <tr><td><code>ban_thuoc_ke_don</code></td><td><span class="pill p-no">Cấm</span></td><td><b>Không có nút nào</b> để bán; chỉ có "Chat với dược sĩ" và "Gửi ảnh đơn thuốc"</td></tr>
       </table>
@@ -325,8 +344,57 @@ function route(raw){
     ? 'Xin lỗi đã làm bạn phải chờ. Mình không bán đại được vì liều cho người nhà bạn phụ thuộc tuổi và cân nặng — dùng sai là hại thật. Để nhanh nhất, mình chuyển thẳng dược sĩ, bạn không phải trả lời thêm câu nào với mình.'
     : 'Xin lỗi vì phải hỏi thêm. Mình cần biết <b>ai sẽ dùng thuốc</b> vì cùng một thuốc, dùng sai người có thể gây hại — chỉ 3 lần chạm, không phải gõ.');
   if(dose.length) ai(`Mình <b>không tự nói liều</b> — liều phụ thuộc tuổi, cân nặng, thuốc đang dùng mà mình không kiểm chứng được qua chat. Bạn dùng theo hướng dẫn trên nhãn hoặc để dược sĩ tư vấn.`);
+  if(LEVEL==='auto') return autoSuggest(raw, riskOf(t));          // phương án đã loại: gửi thẻ ngay
+  if(LEVEL==='no')   return drugBanned(raw, riskOf(t));           // phương án đã loại: mọi câu thuốc qua dược sĩ
   if(b==='RISK') return riskGroup(raw, riskOf(t));
   return screening(raw);
+}
+
+/* ================== ĐỔI MỨC TỰ CHỦ của goi_y_thuoc_dieu_tri_otc ================== */
+let LEVEL = 'ask';
+const LEVELS = {
+  auto: { pill:['p-auto','Tự làm'],
+    desc:'AI gửi thẻ thuốc kèm nút Đặt ngay khi thấy triệu chứng, không sàng lọc.',
+    promise:'"Hỏi là có thuốc ngay." Nhanh nhất, không hỏi câu nào — nhưng AI đoán người dùng thuốc là người đang nhắn.',
+    risk:'<b>Rủi ro (vì sao nhóm loại):</b> KB3 — khách mua Panadol Extra cho mẹ 70 tuổi bị huyết áp, AI gửi thẻ ngay vì không biết ai uống. Thuốc uống rồi không đảo được. <b>Mất [5] và [6]</b>: không có sàng lọc, không có căn cứ an toàn.' },
+  ask: { pill:['p-ask','Cần người duyệt'],
+    desc:'Bị khoá tới khi khách bấm đủ 3 ý sàng lọc [5]; nhóm nguy cơ → không có thẻ, chuyển dược sĩ; khách tự bấm Đặt và xác nhận lại',
+    promise:'"Cho mình 3 lần chạm để biết ai dùng thuốc; người lớn khoẻ thì mình gợi ý ngay, còn lại mình nối dược sĩ." <b>Mức nhóm chọn.</b>',
+    risk:'<b>Vì sao chọn:</b> 3 giây sàng lọc chặn được KB3 (mẹ 70 tuổi), KB2 (thai phụ); người lớn khoẻ vẫn có thuốc ngay, không phải chờ dược sĩ. <b>Còn lại:</b> khách có thể khai sai (lỗi còn lại số 4 ở §6).', ok:true },
+  no: { pill:['p-no','Cấm'],
+    desc:'AI không gợi ý thuốc điều trị nào; mọi câu hỏi thuốc chuyển dược sĩ.',
+    promise:'"Mọi câu hỏi về thuốc do dược sĩ trả lời." An toàn nhất về thuốc — nhưng ca nhẹ nhất cũng phải chờ.',
+    risk:'<b>Rủi ro (vì sao nhóm loại):</b> người lớn khoẻ hỏi thuốc đau họng cũng chờ dược sĩ; KB5 — khách gắt, bỏ đi tự mua không ai tư vấn; dược sĩ trực quá tải nên ca thật sự cần lại chờ lâu hơn. <b>Mất [5] và [6]</b>: AI không còn gì để sàng lọc hay gợi ý.' },
+};
+let lastMsg = null;
+function setLevel(lv){
+  LEVEL = lv; const L = LEVELS[lv];
+  document.querySelectorAll('[data-lv]').forEach(b=>b.classList.toggle('on', b.dataset.lv===lv));
+  $('#pillOtc').innerHTML = `<span class="pill ${L.pill[0]}">${L.pill[1]}</span>`;
+  $('#descOtc').textContent = L.desc;
+  $('#promise').innerHTML = '<b>Lời hứa với khách:</b> ' + L.promise;
+  $('#risk').innerHTML = L.risk; $('#risk').classList.toggle('okk', !!L.ok);
+}
+
+function autoSuggest(raw, risk){
+  typing(()=>{
+    const prod = productFor(raw);
+    log('goi_y_thuoc_dieu_tri_otc','auto','Gửi thẻ thuốc ngay — KHÔNG sàng lọc, không biết ai dùng');
+    ai(`Bạn tham khảo sản phẩm này nhé:
+      <div class="prod"><div class="img">${prod[1]}</div><div><b>${prod[0]}</b><small>Thuốc không kê đơn</small></div></div>
+      <button class="btn pri" onclick="toast('Đã thêm vào giỏ (mock)')">Đặt mua</button>`);
+    chat.insertAdjacentHTML('beforeend', `<div class="note">⚠ Ghi chú thiết kế — mức "Tự làm" (phương án nhóm đã loại): AI không hỏi ai sẽ dùng thuốc.${risk.length?' Tin nhắn đã lộ nhóm nguy cơ (<b>'+risk.map(r=>r[0]).join(', ')+'</b>) mà thẻ thuốc vẫn hiện.':' Nếu người uống là người già có bệnh huyết áp (KB3) thì đây là gợi ý sai, không đảo được.'}</div>`);
+    scroll();
+  });
+}
+
+function drugBanned(raw, risk){
+  typing(()=>{
+    log('goi_y_thuoc_dieu_tri_otc','no','Mức Cấm: không gợi ý thuốc, chuyển dược sĩ cho mọi câu hỏi thuốc');
+    const d = ai(`Câu hỏi về thuốc sẽ do <b>dược sĩ</b> trả lời trực tiếp. Mình đã chuyển cuộc chat, bạn chờ trong giây lát nhé.`);
+    handoff('blu', {'Đối tượng': risk.length ? risk.map(r=>r[0]).join(', ') : 'Chưa hỏi', 'Tin gốc':'“'+esc(raw)+'”', 'AI đã làm':'Không gợi ý (mức Cấm)'}, d);
+    later(()=>{ chat.insertAdjacentHTML('beforeend', `<div class="note">⚠ Ghi chú thiết kế — mức "Cấm" (phương án nhóm đã loại): ${risk.length?'ca này đúng là cần dược sĩ.':'ca nhẹ của người lớn khoẻ cũng phải chờ dược sĩ (ước 5–10 phút khi trực đông). Khách gắt như KB5 sẽ bỏ đi tự mua.'}</div>`); scroll(); }, 1200);
+  });
 }
 
 function riskOf(t){
@@ -569,15 +637,18 @@ function reset(){
   sys('Hôm nay 23:42');
   ai('Xin chào, mình là <b>trợ lý AI</b> của Pharmacity. Mình giúp tra sản phẩm và <b>phân luồng</b>: việc nào cần dược sĩ, việc nào cần đi khám ngay. Mình không chẩn đoán, không nói liều, không bán thuốc kê đơn.');
 }
-function send(t){ t=t.trim(); if(!t) return; me(t); route(t); }
+function send(t){ t=t.trim(); if(!t) return; lastMsg=t; me(t); route(t); }
+/* Đổi mức → chạy lại đúng tin vừa gửi (mặc định: ca đau họng) để so sánh cùng một ca ở 3 mức */
+document.querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{ setLevel(b.dataset.lv); const m=lastMsg||CASES.kb10; reset(); send(m); });
 document.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{ const k=b.dataset.run; reset(); if(k!=='reset') send(CASES[k]); });
 $('#send').onclick=()=>{ send($('#msg').value); $('#msg').value=''; };
 $('#msg').addEventListener('keydown',e=>{ if(e.key==='Enter'){ send($('#msg').value); $('#msg').value=''; }});
 $('#showN').onchange=e=>document.body.classList.toggle('hide-n',!e.target.checked);
 
-/* Mở thẳng một cảnh để chụp ảnh: index.html#kb1 · #kb2 · #screen2 · #screen2-ok */
+/* Mở thẳng một cảnh để chụp ảnh: index.html#kb1 · #kb2 · #screen2 · #screen2-ok · #q=<tin> · thêm &lv=auto|no */
+setLevel((location.hash.match(/lv=(auto|ask|no)/)||[])[1]||'ask');
 reset();
-const h=location.hash.slice(1);
+const h=location.hash.slice(1).replace(/&?lv=\w+/,'');
 if(h){ instant=true;
   if(CASES[h]) send(CASES[h]);
   if(h.startsWith('q=')) send(decodeURIComponent(h.slice(2)));
