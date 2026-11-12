@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype T1 · Hỏi Dược sĩ · Nhóm TyDo</title>
+<style>
+:root{
+  --ink:#1c2321;--mut:#66706c;--line:#dde1dc;--bg:#f3f5f2;--card:#fff;
+  --brand:#0d6e5b;--brand-b:#e3f2ee;
+  --red:#b42318;--red-b:#fdeceb;--red-l:#f3b8b2;
+  --amb:#93590b;--amb-b:#fdf3dc;--amb-l:#efd391;
+  --blu:#1f4f86;--blu-b:#e5eef9;
+  --ok:#21704a;--ok-b:#e4f3ea;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI","Noto Sans",Arial,sans-serif}
+header.top{background:#fff;border-bottom:1px solid var(--line);padding:14px 24px}
+header.top h1{font-size:18px;margin:0 0 2px}
+header.top p{margin:0;color:var(--mut);font-size:13px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.ctrl span{font-size:13px;color:var(--mut)}
+.ctrl button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13.5px;cursor:pointer}
+.ctrl button:hover{border-color:var(--ink)}
+.ctrl label{font-size:13px;margin-left:8px;cursor:pointer}
+main{display:grid;grid-template-columns:400px 1fr;gap:22px;padding:18px 24px 28px;max-width:1320px}
+@media (max-width:900px){main{grid-template-columns:1fr;padding:16px}}
+
+/* ---------- phone ---------- */
+.phone{background:#fff;border:1px solid var(--line);border-radius:26px;overflow:hidden;display:flex;flex-direction:column;height:max(640px,min(900px,calc(100vh - 190px)));box-shadow:0 2px 12px rgba(0,0,0,.06);position:relative}
+.oa{background:var(--brand);color:#fff;padding:10px 14px}
+.oa .name{font-weight:700;font-size:15px}
+.oa .ai-tag{margin-top:6px;background:rgba(255,255,255,.16);border-radius:8px;padding:5px 8px;font-size:12.5px}
+.phone.red .oa{background:var(--red)}
+.chat{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:10px;background:#f7f8f6}
+.me{align-self:flex-end;background:var(--blu);color:#fff;padding:8px 12px;border-radius:14px 14px 2px 14px;max-width:85%}
+.ai{align-self:flex-start;background:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:14px 14px 14px 2px;max-width:95%}
+.ai .who{font-size:11.5px;color:var(--mut);margin-bottom:3px}
+.sys{align-self:center;font-size:12px;color:var(--mut);background:#eceeea;border-radius:999px;padding:3px 10px;text-align:center}
+.banner{background:var(--red-b);border:1.5px solid var(--red-l);border-radius:12px;padding:10px 12px}
+.banner .t{color:var(--red);font-weight:800;font-size:15px}
+.banner ol{margin:6px 0 0;padding-left:18px}
+.banner li{margin-bottom:3px}
+.ev{font-size:12.5px;color:var(--mut);border-left:3px solid var(--line);padding-left:8px;margin-top:8px}
+.chip-ev{display:inline-block;background:#fff;border:1px solid var(--red-l);color:var(--red);border-radius:6px;padding:0 6px;margin:2px 2px 0 0;font-size:12px;font-weight:600}
+.chip-ev.amb{border-color:var(--amb-l);color:var(--amb)}
+.chip-ev.ok{border-color:#b8dcc7;color:var(--ok)}
+mark.hl{background:#ffd9d4;color:var(--red);border-radius:3px;padding:0 2px}
+mark.hl.amb{background:#fbe6b3;color:var(--amb)}
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:10px;padding:10px 12px;font:inherit;font-size:14.5px;cursor:pointer;margin-top:8px;text-decoration:none}
+.btn.red{background:var(--red);color:#fff;font-weight:800;font-size:16px;padding:13px}
+.btn.out{background:#fff;color:var(--ink);border:1.5px solid var(--ink)}
+.btn.pri{background:var(--brand);color:#fff;font-weight:600}
+.btn.ghost{background:transparent;color:var(--mut);font-size:13px;text-decoration:underline;padding:4px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{border-radius:12px;padding:10px 12px;margin-top:8px}
+.card.amb{background:var(--amb-b);border:1.5px solid var(--amb-l)}
+.card.amb .t{color:var(--amb);font-weight:800}
+.card.ok{background:var(--ok-b);border:1px solid #b8dcc7}
+.card.blu{background:var(--blu-b);border:1px solid #bcd0e6}
+.prod{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fff;margin-top:8px}
+.prod .img{width:44px;height:44px;border-radius:8px;background:#e7ece9;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+.prod small{color:var(--mut);display:block}
+.screen{border:1.5px solid #bcd0e6;background:var(--blu-b);border-radius:12px;padding:10px 12px;margin-top:8px}
+.grp{margin-top:8px}
+.grp .q{font-size:13px;font-weight:600;margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1.5px solid #9fb6d3;background:#fff;border-radius:999px;padding:5px 10px;font:inherit;font-size:13px;cursor:pointer}
+.chip.on{background:var(--blu);border-color:var(--blu);color:#fff}
+.consent{display:flex;gap:6px;align-items:flex-start;font-size:12.5px;margin-top:8px;color:var(--ink)}
+.status{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:8px;padding:7px 10px;border-radius:8px;background:#fff;border:1px dashed var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;background:#c9a227;flex:none;animation:pulse 1s infinite}
+.dot.done{background:var(--ok);animation:none}
+@keyframes pulse{50%{opacity:.3}}
+.lockbar{display:none;background:var(--red);color:#fff;font-size:13px;padding:8px 12px;font-weight:600}
+.phone.red .lockbar{display:block}
+.menu{display:flex;border-top:1px solid var(--line);background:#fff}
+.menu div{flex:1;text-align:center;font-size:12.5px;padding:7px 0;color:var(--mut)}
+.phone.red .menu .shop{display:none}
+.input{display:flex;gap:6px;padding:8px;border-top:1px solid var(--line);background:#fff}
+.input input{flex:1;border:1.5px solid var(--line);border-radius:999px;padding:8px 12px;font:inherit;font-size:14px}
+.input button{border:0;background:var(--brand);color:#fff;border-radius:999px;padding:0 14px;font:inherit;cursor:pointer}
+.typing{font-size:12px;color:var(--mut);align-self:flex-start;padding-left:6px}
+
+/* ---------- side panels ---------- */
+aside{display:flex;flex-direction:column;gap:16px;min-width:0}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px}
+.panel h2{font-size:15.5px;margin:0 0 8px}
+.panel .hint{font-size:12.5px;color:var(--mut);margin:-4px 0 8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:1150px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{border-bottom:1px solid var(--line);padding:6px;text-align:left;vertical-align:top}
+th{color:var(--mut);font-weight:600}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.p-auto{background:var(--ok-b);color:var(--ok)}
+.p-ask{background:var(--amb-b);color:var(--amb)}
+.p-no{background:var(--red-b);color:var(--red)}
+.p-lock{background:#eceae4;color:#555}
+#log{list-style:none;margin:0;padding:0;font-size:13px;max-height:260px;overflow-y:auto}
+#log li{border-bottom:1px solid var(--line);padding:6px 0;display:grid;grid-template-columns:52px 1fr;gap:6px}
+#log .tm{color:var(--mut);font-variant-numeric:tabular-nums}
+#log code{font-size:12.5px}
+.empty{color:var(--mut);font-size:13px}
+.case{border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13.5px}
+.case.red{background:var(--red-b);border:1.5px solid var(--red-l)}
+.case.amb{background:var(--amb-b);border:1.5px solid var(--amb-l)}
+.case.blu{background:var(--blu-b);border:1px solid #bcd0e6}
+.case .h{display:flex;justify-content:space-between;gap:6px;font-weight:700}
+.case dl{display:grid;grid-template-columns:110px 1fr;gap:2px 8px;margin:6px 0 0}
+.case dt{color:var(--mut)}
+.case dd{margin:0}
+.timer{font-variant-numeric:tabular-nums;font-weight:700}
+.n{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;border-radius:50%;background:#c2410c;color:#fff;font-size:11.5px;font-weight:800;margin-right:4px;vertical-align:1px;flex:none;padding:0 3px}
+.hide-n .n{display:none}
+.toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);background:#222;color:#fff;font-size:13px;padding:7px 12px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;width:max-content;max-width:90%}
+.toast.show{opacity:.92}
+.modal{position:absolute;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:18px}
+.modal.show{display:flex}
+.modal .box{background:#fff;border-radius:14px;padding:16px;font-size:14px}
+.foot{font-size:12px;color:var(--mut);padding:0 24px 20px;max-width:1320px}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Prototype T1 · Kênh "Hỏi Dược sĩ" của Pharmacity (mô phỏng Zalo OA) · Nhóm TyDo</h1>
+  <p>Lát cắt: khách hỏi "tôi (hoặc người nhà) bị X, có thuốc gì không" → AI gợi ý, hỏi sàng lọc, chuyển dược sĩ, hay khuyên đi khám ngay. Dữ liệu dựng · không gọi AI thật · luật phân luồng chạy bằng từ khoá trong trình duyệt.</p>
+  <div class="ctrl">
+    <span>Chạy ca:</span>
+    <button data-run="kb1">KB1 · Bé 2 tuổi sốt co giật (Màn hình 1)</button>
+    <button data-run="kb2">KB2 · Bầu 3 tháng đòi kháng sinh</button>
+    <button data-run="kb10">Ca thường · Đau họng (Màn hình 2)</button>
+    <button data-run="kb11">KB11 · "lơ mơ" lẫn trong đơn hàng</button>
+    <button data-run="kb9">KB9 · Hỏi tồn kho nước muối</button>
+    <button data-run="reset">↺ Làm lại</button>
+    <label><input type="checkbox" id="showN" checked> Hiện số chú thích [1]–[6]</label>
+  </div>
+</header>
+
+<main id="root">
+  <!-- ================= PHONE ================= -->
+  <section>
+    <div class="phone" id="phone">
+      <div class="oa">
+        <div class="name">Pharmacity · Hỏi Dược sĩ / Online Support</div>
+        <div class="ai-tag"><span class="n">1</span>🤖 <b>Trợ lý AI Sàng lọc Ban đầu</b> — không thay thế bác sĩ / dược sĩ cấp cứu</div>
+      </div>
+      <div class="lockbar"><span class="n">4</span>🔒 Đã khóa đặt thuốc tự động — đang kết nối ưu tiên số 1 tới Dược sĩ trực online</div>
+      <div class="chat" id="chat"></div>
+      <div class="input">
+        <input id="msg" placeholder="Nhắn thử một ca lạ…" autocomplete="off">
+        <button id="send">Gửi</button>
+      </div>
+      <div class="menu"><div class="shop">🛒 Mua thuốc</div><div class="shop">🧺 Giỏ hàng</div><div>👩‍⚕️ Dược sĩ</div><div>📍 Cửa hàng</div></div>
+      <div class="toast" id="toast"></div>
+      <div class="modal" id="modal"><div class="box" id="modalBox"></div></div>
+    </div>
+  </section>
+
+  <!-- ================= SIDE ================= -->
+  <aside>
+    <div class="grid2">
+      <div class="panel">
+        <h2>👩‍⚕️ Màn hình phía dược sĩ (mock)</h2>
+        <p class="hint">Ai được báo, sau bao lâu, thấy gì — ca nhận kèm tóm tắt, khách không phải kể lại.</p>
+        <div id="inbox"><p class="empty">Chưa có ca nào được chuyển.</p></div>
+      </div>
+      <div class="panel">
+        <h2>🧾 Nhật ký tool (AI đã gọi gì, ở mức nào)</h2>
+        <p class="hint">Mỗi lần AI định gọi tool, nhật ký ghi mức tự chủ ở §4 và kết quả.</p>
+        <ul id="log"><li class="empty" style="display:block">Chưa có lời gọi tool.</li></ul>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Mức tự chủ của tool (theo §4)</h2>
+      <table>
+        <tr><th>Tool</th><th>Mức</th><th>Trên màn hình trông thế nào</th></tr>
+        <tr><td><code>khuyen_di_kham</code></td><td><span class="pill p-auto">Tự làm</span></td><td>Có dấu hiệu đỏ → cảnh báo đỏ và nút 115 ở tin trả lời đầu tiên; có nút đính chính "Tôi gõ nhầm" (vẫn qua dược sĩ, không mở lại giỏ hàng)</td></tr>
+        <tr><td><code>chuyen_duoc_si</code></td><td><span class="pill p-auto">Tự làm</span></td><td>Tự chuyển kèm tóm tắt; câu "đã chuyển" chỉ hiện <b>sau khi</b> tool trả kết quả. Ca đỏ: chạy song song với 115, không thay cho 115</td></tr>
+        <tr><td><code>goi_y_vat_tu_y_te</code> <small>(tách từ goi_y_san_pham)</small></td><td><span class="pill p-auto">Tự làm</span></td><td>Nước muối, nhiệt kế, khẩu trang… gợi ý ngay, không sàng lọc</td></tr>
+        <tr><td><code>goi_y_thuoc_dieu_tri_otc</code> <small>(tách từ goi_y_san_pham)</small></td><td><span class="pill p-ask">Cần người duyệt</span></td><td>Bị khoá tới khi khách bấm đủ 3 ý sàng lọc [5]; nhóm nguy cơ → không có thẻ, chuyển dược sĩ; khách tự bấm Đặt và xác nhận lại</td></tr>
+        <tr><td><code>luu_ghi_chu_suc_khoe</code></td><td><span class="pill p-ask">Cần khách đồng ý</span></td><td>Ô đồng ý [6] mặc định <b>không tick</b>; không tick = không lưu</td></tr>
+        <tr><td><code>ban_thuoc_ke_don</code></td><td><span class="pill p-no">Cấm</span></td><td><b>Không có nút nào</b> để bán; chỉ có "Chat với dược sĩ" và "Gửi ảnh đơn thuốc"</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <h2>Chú thích: nguyên tắc nào nằm ở đâu (khớp bảng §5)</h2>
+      <table>
+        <tr><th>Số</th><th>Chỗ trên màn hình</th><th>HAX / PAIR</th></tr>
+        <tr><td><span class="n">1</span></td><td>Nhãn "Trợ lý AI Sàng lọc Ban đầu" ở đầu khung chat · banner đỏ kèm <b>căn cứ</b> (từ khoá được tô đỏ)</td><td>G1 (+ Luật AI 134/2025 Đ.11) · PAIR Explainability</td></tr>
+        <tr><td><span class="n">2</span></td><td>Nút đỏ to "Gọi cấp cứu 115"</td><td>PAIR Graceful Failure</td></tr>
+        <tr><td><span class="n">3</span></td><td>Nút "Tìm khoa Cấp cứu gần nhất" + nút đính chính "Tôi gõ nhầm"</td><td>PAIR Graceful Failure · G8/G9</td></tr>
+        <tr><td><span class="n">4</span></td><td>Thanh khoá đặt thuốc; menu Mua thuốc/Giỏ hàng biến mất</td><td>G10</td></tr>
+        <tr><td><span class="n">5</span></td><td>Hộp sàng lọc 1 chạm (3 nhóm chip), nút Xác nhận mờ tới khi chọn đủ</td><td>G10 · G2</td></tr>
+        <tr><td><span class="n">6</span></td><td>Kết quả sau sàng lọc: "căn cứ an toàn", nút Sửa lựa chọn, ô đồng ý lưu hồ sơ</td><td>PAIR Explainability + Trust · G9</td></tr>
+      </table>
+    </div>
+  </aside>
+</main>
+<p class="foot">LAB5 · AI20K K5 · T1 Y tế · Nhóm TyDo. Một file HTML, không gọi AI thật, không gửi dữ liệu đi đâu. Sản phẩm trong chat là sản phẩm mẫu, không phải tên thuốc thật. Danh sách dấu hiệu đỏ do nhóm đặt cho bài lab (xem §6), sản phẩm thật cần dược sĩ/bác sĩ duyệt.</p>
+
+<script>
+/* ================== DỮ LIỆU LUẬT (khớp §1 4 nhánh, §6 danh sách dấu hiệu đỏ) ================== */
+const RED = ['co giật','giật giật','mắt trợn','trợn ngược','khó thở','thở dốc','thở rít','tím môi','tím tái','đau ngực','tức ngực','lơ mơ','li bì','gọi không thưa','ngất','bất tỉnh','đau bụng dữ dội','quằn quại','nôn ra máu','đi ngoài phân đen','phân đen','sưng môi','sưng mặt','méo miệng','liệt','yếu nửa người','quá liều','uống nhầm'];
+const ETC = ['kháng sinh','amoxicillin','augmentin','cefuroxim','azithromycin','thuốc huyết áp','thuốc ngủ','corticoid','prednisolon','trợ tim','xuất đơn'];
+const CLAIM = ['tôi là bác sĩ','mình là bác sĩ','tôi là dược sĩ','nhân viên pharmacity'];
+const PREG = ['bầu','mang thai','có thai','cho con bú'];
+const CHILD = ['bé','con tôi','con mình','con nhà','trẻ','tháng tuổi','cháu'];
+const ELDER = ['bố tôi','mẹ tôi','bố mình','mẹ mình','ông nội','ông ngoại','bà nội','bà ngoại','người già','cao tuổi'];
+const CHRONIC = ['huyết áp','tiểu đường','bệnh nền','dị ứng','hen suyễn','tim mạch','đang uống thuốc'];
+const SUPPLY = ['nước muối','nhiệt kế','khẩu trang','bông','băng gạc','gạc','cồn'];
+const STOCK = ['còn hàng','còn không','còn ko','còn nước muối','có sẵn','tồn kho'];
+const DOSE = ['mấy viên','mấy ml','liều','uống bao nhiêu','ngày mấy','mấy lần'];
+
+const $ = s => document.querySelector(s);
+const chat = $('#chat'), phone = $('#phone');
+let instant = false, caseNo = 0, timers = [];
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const found = (t, list) => list.filter(k => t.includes(k));
+const now = () => new Date().toTimeString().slice(0,5);
+function ageOf(t){ const m = t.match(/(\d{1,3})\s*tuổi/); return m ? +m[1] : null; }
+
+function later(fn, ms){ if(instant){ fn(); return; } const id = setTimeout(fn, ms); timers.push(id); }
+function scroll(){ chat.scrollTop = chat.scrollHeight; }
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
+
+function me(t){ chat.insertAdjacentHTML('beforeend', `<div class="me">${esc(t)}</div>`); scroll(); }
+function ai(html){ const d=document.createElement('div'); d.className='ai'; d.innerHTML=`<div class="who">Trợ lý AI · Pharmacity</div>${html}`; chat.appendChild(d); scroll(); return d; }
+function sys(t){ chat.insertAdjacentHTML('beforeend', `<div class="sys">${t}</div>`); scroll(); }
+function typing(fn){ if(instant){ fn(); return; } const d=document.createElement('div'); d.className='typing'; d.textContent='Trợ lý AI đang trả lời…'; chat.appendChild(d); scroll(); later(()=>{ d.remove(); fn(); }, 550); }
+
+const LV = {auto:['p-auto','Tự làm'], ask:['p-ask','Cần người duyệt'], consent:['p-ask','Cần khách đồng ý'], no:['p-no','Cấm'], lock:['p-lock','Bị khoá']};
+function log(tool, lv, result){
+  const ul=$('#log'); const e=ul.querySelector('.empty'); if(e) e.remove();
+  ul.insertAdjacentHTML('afterbegin', `<li><span class="tm">${now()}</span><span><code>${tool}</code> <span class="pill ${LV[lv][0]}">${LV[lv][1]}</span><br>${result}</span></li>`);
+}
+
+function highlight(t, words, cls=''){
+  let h = esc(t);
+  words.sort((a,b)=>b.length-a.length).forEach(w=>{ h = h.split(esc(w)).join(`<mark class="hl ${cls}">${esc(w)}</mark>`); });
+  return h;
+}
+
+/* Gọi chuyen_duoc_si: câu "đã chuyển" chỉ hiện SAU khi tool trả kết quả (§6 lỗi còn lại 2) */
+function handoff(kind, summary, statusHost, opts={}){
+  const st=document.createElement('div'); st.className='status';
+  st.innerHTML=`<span class="dot"></span><span>Đang chuyển ca tới Dược sĩ trực${kind==='red'?' (ưu tiên số 1)':''}…</span>`;
+  statusHost.appendChild(st); scroll();
+  later(()=>{
+    const id = 'CA-' + (1040 + (++caseNo));
+    addCase(kind, id, summary, opts);
+    log('chuyen_duoc_si','auto', `Đã tạo ${id}${kind==='red'?' · cờ PRIORITY_RED_FLAG, bỏ qua hàng chờ thường':' · kèm tóm tắt'}`);
+    st.innerHTML=`<span class="dot done"></span><span>✅ Đã chuyển — Dược sĩ trực đã nhận ca <b>${id}</b>. Bạn không cần kể lại.</span>`;
+    scroll();
+  }, 1100);
+}
+
+function addCase(kind, id, s, opts){
+  const box=$('#inbox'); const e=box.querySelector('.empty'); if(e) e.remove();
+  const rows = Object.entries(s).map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('');
+  const label = {red:'🔴 ƯU TIÊN ĐỎ', amb:'🟠 Nhóm nguy cơ / thuốc kê đơn', blu:'🔵 Ca thường'}[kind];
+  const div=document.createElement('div'); div.className='case '+kind;
+  div.innerHTML=`<div class="h"><span>${label}</span><span>${id} · ${now()}</span></div><dl>${rows}</dl>${opts.callback?`<div class="ev">Nếu khách chưa phản hồi trong <span class="timer">60</span> giây → dược sĩ gọi lại qua Zalo/SĐT.</div>`:''}`;
+  box.prepend(div);
+  if(opts.callback){
+    const tEl=div.querySelector('.timer'); let left=60;
+    const iv=setInterval(()=>{ left--; tEl.textContent=left; if(left<=0){ clearInterval(iv); tEl.parentElement.innerHTML='⏰ Hết 60 giây, khách chưa phản hồi → <b>dược sĩ đang gọi lại</b>.'; } },1000);
+    timers.push(iv);
+  }
+}
+
+/* ================== 4 NHÁNH (thứ tự ưu tiên ở §1) ================== */
+function route(raw){
+  const t = raw.toLowerCase();
+  const red = found(t, RED);
+  if(red.length) return emergency(raw, red);                      // nhánh 1 — xét TRƯỚC mọi việc khác
+  const etc = found(t, ETC), claim = found(t, CLAIM);
+  if(etc.length || claim.length) return refuseETC(raw, etc, claim); // vùng cấm → dược sĩ
+  const dose = found(t, DOSE);
+  const sup = found(t, SUPPLY);
+  if(sup.length && !dose.length) return supply(raw, sup, found(t, STOCK).length>0);
+  const risk = riskOf(t);
+  if(dose.length) ai(`Mình <b>không tự nói liều</b> — liều phụ thuộc tuổi, cân nặng, thuốc đang dùng mà mình không kiểm chứng được qua chat. Bạn dùng theo hướng dẫn trên nhãn hoặc để dược sĩ tư vấn.`);
+  if(risk.length) return riskGroup(raw, risk);                     // nhóm nguy cơ → dược sĩ
+  return screening(raw);                                           // chưa rõ người dùng → sàng lọc 1 chạm
+}
+
+function riskOf(t){
+  const r=[]; const a=ageOf(t);
+  const p=found(t,PREG); if(p.length) r.push(['Mang thai / cho con bú',p]);
+  const c=found(t,CHILD); if(c.length || (a!==null && a<12)) r.push(['Trẻ nhỏ',c.length?c:[a+' tuổi']]);
+  const e=found(t,ELDER); if(e.length || (a!==null && a>60)) r.push(['Người cao tuổi',e.length?e:[a+' tuổi']]);
+  const h=found(t,CHRONIC); if(h.length) r.push(['Bệnh nền / dị ứng / đang dùng thuốc',h]);
+  return r;
+}
+
+/* ---------- Nhánh 1: Màn hình 1 — Emergency Red Screen ---------- */
+function emergency(raw, red){
+  typing(()=>{
+    phone.classList.add('red');
+    log('khuyen_di_kham','auto','Phát hiện dấu hiệu đỏ → hiện cảnh báo + nút 115 ở tin trả lời đầu tiên');
+    log('goi_y_san_pham','lock','Không gọi: luồng bán hàng bị khoá khi có dấu hiệu đỏ');
+    const isChild = riskOf(raw.toLowerCase()).some(r=>r[0]==='Trẻ nhỏ');
+    const d = ai(`
+      <div class="banner">
+        <div class="t"><span class="n">1</span>🚨 CẢNH BÁO Y TẾ KHẨN CẤP — CẦN ĐI KHÁM NGAY</div>
+        <div style="margin-top:4px">${isChild?'Sốt cao kèm co giật hoặc khó thở ở trẻ nhỏ':'Dấu hiệu bạn mô tả'} là tình trạng nguy hiểm, cần can thiệp y tế ngay — <b>không chờ giao thuốc</b>.</div>
+        <div style="margin-top:8px;font-weight:700">🚑 Làm ngay bây giờ:</div>
+        <ol>
+          <li>Gọi <b>Cấp cứu 115</b> hoặc đưa ${isChild?'bé':'người bệnh'} đến khoa Cấp cứu gần nhất.</li>
+          ${isChild?'<li>Đặt bé nằm nghiêng một bên, nơi thoáng; nới lỏng quần áo; chườm ấm (không dùng nước đá, cồn).</li><li>Không nhét thuốc hay bất cứ vật gì vào miệng bé lúc đang co giật.</li>':'<li>Không tự uống thêm thuốc trong lúc chờ; ngồi hoặc nằm nghỉ, không gắng sức.</li>'}
+        </ol>
+        <div class="ev">Căn cứ mình dựa vào — từ khoá nguy hiểm trong tin của bạn:<br>“${highlight(raw, red)}”</div>
+      </div>
+      <a class="btn red" href="tel:115" onclick="log('—','auto','Khách bấm Gọi 115 (mở trình quay số)')"><span class="n">2</span>📞 BẤM GỌI CẤP CỨU 115 NGAY</a>
+      <button class="btn out" onclick="toast('Mở bản đồ: khoa Cấp cứu / Bệnh viện Nhi gần nhất (mock)')"><span class="n">3</span>🏥 Tìm khoa Cấp cứu / Bệnh viện Nhi gần nhất</button>
+      <button class="btn ghost" id="oops">Tôi gõ nhầm, không có dấu hiệu này</button>
+      <div class="ev">Mình là trợ lý AI, không thay bác sĩ cấp cứu. Cuộc chat được chuyển song song cho dược sĩ — nhưng <b>đừng chờ tin nhắn</b>, hãy gọi 115 trước.</div>`);
+    handoff('red', {
+      'Đối tượng': isChild ? 'Trẻ nhỏ' + (ageOf(raw.toLowerCase())?` (${ageOf(raw.toLowerCase())} tuổi)`:'') : 'Chưa rõ',
+      'Dấu hiệu đỏ': red.join(', '),
+      'Tin gốc': '“'+esc(raw)+'”',
+      'AI đã làm': 'Cảnh báo đỏ + nút 115 · khoá đặt thuốc',
+    }, d, {callback:true});
+    d.querySelector('#oops').onclick = ()=>{
+      me('Tôi gõ nhầm, không có dấu hiệu đó');
+      typing(()=>{
+        ai(`Cảm ơn bạn đã đính chính. Vì đây là ca có thể nguy hiểm, mình <b>vẫn giữ ca ở dược sĩ để xác minh</b> — giỏ hàng chưa mở lại. Dược sĩ sẽ nhắn bạn ngay. Nếu dấu hiệu quay lại, gọi 115.`);
+        log('—','auto','Khách đính chính → AI KHÔNG tự mở lại giỏ hàng; chờ dược sĩ xác minh');
+      });
+    };
+  });
+}
+
+/* ---------- Thuốc kê đơn / danh xưng tự khai (KB2, KB7) ---------- */
+function refuseETC(raw, etc, claim){
+  typing(()=>{
+    const t=raw.toLowerCase(); const risk=riskOf(t);
+    const preg = risk.find(r=>r[0].startsWith('Mang thai'));
+    log('ban_thuoc_ke_don','no','Yêu cầu bị chặn ở tầng API — không có nút bán trên giao diện');
+    if(preg) log('goi_y_san_pham','lock','Không gợi ý thuốc "thay thế an toàn cho bà bầu" — để dược sĩ tư vấn');
+    log('luu_ghi_chu_suc_khoe','consent','Không gọi: khách chưa đồng ý lưu thông tin thai kỳ');
+    const words = [...etc, ...claim, ...(preg?preg[1]:[])];
+    const d = ai(`
+      <div class="card amb">
+        <div class="t">⚠️ ${preg?'Không bán kháng sinh không đơn — bảo vệ an toàn thai kỳ':'Không bán thuốc kê đơn qua chat'}</div>
+        <div style="margin-top:4px">Trợ lý AI của Pharmacity <b>không thể bán ${etc.length?'thuốc kê đơn':'thuốc theo yêu cầu này'}</b> khi chưa có đơn hợp lệ của bác sĩ${preg?', nhất là khi bạn đang mang thai — giai đoạn nhạy cảm với thai nhi':''}. Mình cũng <b>không gợi ý thuốc nào "thay thế"</b>.</div>
+        ${claim.length?'<div style="margin-top:4px">Danh xưng gửi trong chat là thông tin, không phải quyền — mình không xác thực được nên không mở luồng bán.</div>':''}
+        <div class="ev">Căn cứ: “${highlight(raw, words, 'amb')}”<br>
+          ${etc.length?'<span class="chip-ev amb">Thuốc kê đơn (ETC)</span>':''}
+          ${preg?'<span class="chip-ev amb">Nhóm nguy cơ: '+preg[0]+'</span>':''}
+          ${claim.length?'<span class="chip-ev amb">Danh xưng tự khai</span>':''}</div>
+        <div style="margin-top:8px;font-weight:700">👩‍⚕️ Bước tiếp theo:</div>
+        <div>Dược sĩ chuyên môn sẽ tư vấn cách giảm triệu chứng an toàn${preg?' cho mẹ bầu':''}. Nếu bạn đã có đơn của bác sĩ, gửi ảnh đơn để dược sĩ kiểm tra.</div>
+      </div>
+      <button class="btn pri" id="toPh">👩‍⚕️ Chat ngay với Dược sĩ chuyên môn</button>
+      <button class="btn out" onclick="toast('Mở chọn ảnh đơn thuốc → gửi kèm ca cho dược sĩ (mock)')">📷 Gửi ảnh đơn thuốc của bác sĩ</button>`);
+    handoff('amb', {
+      'Đối tượng': preg ? 'Thai phụ' + (t.match(/(\d+)\s*tháng/)?` ${t.match(/(\d+)\s*tháng/)[1]} tháng`:'') : (risk[0]?risk[0][0]:'Chưa rõ'),
+      'Yêu cầu bị chặn': esc(etc.concat(claim).join(', ')),
+      'Tin gốc': '“'+esc(raw)+'”',
+      'AI đã làm': 'Từ chối · không gợi ý thay thế · không lưu hồ sơ',
+    }, d);
+    d.querySelector('#toPh').onclick=()=>toast('Ca đã ở hàng ưu tiên nhóm nguy cơ — dược sĩ sẽ nhắn trong khung chat này');
+  });
+}
+
+/* ---------- Nhóm nguy cơ đã rõ trong tin → chuyển dược sĩ, không thẻ thuốc ---------- */
+function riskGroup(raw, risk){
+  typing(()=>{
+    log('goi_y_thuoc_dieu_tri_otc','lock','Không hiện thẻ: người dùng thuộc nhóm nguy cơ ('+risk.map(r=>r[0]).join(', ')+')');
+    const words = risk.flatMap(r=>r[1]);
+    const d = ai(`Vì người dùng thuốc thuộc <b>nhóm cần dược sĩ tư vấn</b>, mình không tự gợi ý thuốc.
+      <div class="ev">Căn cứ: “${highlight(raw, words, 'amb')}”<br>${risk.map(r=>`<span class="chip-ev amb">${r[0]}</span>`).join('')}</div>
+      <div style="margin-top:6px">Nếu có <b>khó thở, co giật, lơ mơ, sốt cao không hạ</b> → gọi 115 ngay, đừng chờ.</div>
+      <a class="btn out" href="tel:115">📞 Có dấu hiệu nguy hiểm → Gọi 115</a>`);
+    handoff('amb', {'Đối tượng': risk.map(r=>r[0]).join(', '), 'Tin gốc':'“'+esc(raw)+'”', 'AI đã làm':'Không gợi ý thuốc · chuyển kèm tóm tắt'}, d);
+  });
+}
+
+/* ---------- Vật tư / tồn kho (KB9, KB12) ---------- */
+function supply(raw, sup, askStock){
+  typing(()=>{
+    log('goi_y_vat_tu_y_te','auto','Gợi ý vật tư không phải thuốc — không cần sàng lọc');
+    ai(`${askStock?'Mình <b>không xem được tồn kho từng cửa hàng</b> (mình không có dữ liệu này), nên không dám nói "còn hàng". Bạn có thể đặt giao tận nơi, hoặc gọi cửa hàng trước khi qua.<br>':''}
+      <div class="prod"><div class="img">🧴</div><div><b>${sup[0][0].toUpperCase()+sup[0].slice(1)} (sản phẩm mẫu)</b><small>Vật tư y tế · không phải thuốc · không cần sàng lọc</small></div></div>
+      <button class="btn pri" onclick="toast('Thêm vào giỏ (mock) — khách tự bấm đặt')">Đặt giao tận nơi</button>
+      ${askStock?'<button class="btn out" onclick="toast(\'Danh sách cửa hàng gần bạn + số điện thoại (mock)\')">📍 Xem cửa hàng gần nhất để gọi hỏi</button>':''}`);
+  });
+}
+
+/* ---------- Màn hình 2: Sàng lọc nhân thân 1 chạm ---------- */
+function screening(raw, preset){
+  typing(()=>{
+    log('goi_y_thuoc_dieu_tri_otc','ask','Chưa đủ thông tin người dùng thuốc → khoá thẻ sản phẩm, hiện sàng lọc 1 chạm');
+    const d = ai(`Mình chưa biết <b>ai sẽ dùng thuốc</b>, nên chưa gợi ý được — gợi ý sai người thì không lấy lại được. Bạn chọn nhanh 3 ý (khoảng 3 giây):
+      <div class="screen"><b><span class="n">5</span>Sàng lọc 1 chạm</b>
+        <div class="grp" data-g="who"><div class="q">Ai sẽ dùng thuốc?</div><div class="chips">
+          <button class="chip" data-v="adult">Người lớn (18–60)</button><button class="chip" data-v="child">Trẻ nhỏ (&lt;12)</button><button class="chip" data-v="elder">Người già (&gt;60)</button></div></div>
+        <div class="grp" data-g="preg"><div class="q">Đang mang thai / cho con bú?</div><div class="chips">
+          <button class="chip" data-v="yes">Có</button><button class="chip" data-v="no">Không</button></div></div>
+        <div class="grp" data-g="hist"><div class="q">Có bệnh nền, dị ứng thuốc, hoặc đang dùng thuốc khác?</div><div class="chips">
+          <button class="chip" data-v="yes">Có</button><button class="chip" data-v="no">Không có</button></div></div>
+        <button class="btn pri" id="okScr" disabled>Xác nhận</button>
+        <button class="btn ghost" id="skip">Mình không muốn trả lời → để dược sĩ tư vấn</button>
+      </div>
+      <div class="ev">Nút "Đặt mua" chưa có: thẻ thuốc chỉ mở khi đủ 3 ý và người dùng là người lớn khoẻ.</div>`);
+    const sel={};
+    d.querySelectorAll('.grp').forEach(g=>g.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+      g.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); sel[g.dataset.g]=c.dataset.v;
+      d.querySelector('#okScr').disabled = Object.keys(sel).length<3;
+    }));
+    d.querySelector('#okScr').onclick=()=>result(raw, {...sel}, d);
+    d.querySelector('#skip').onclick=()=>{ me('Không muốn trả lời'); typing(()=>{ const x=ai('Không sao. Mình không bán khi chưa biết ai dùng — mình chuyển dược sĩ để tư vấn nhanh cho bạn.'); log('goi_y_thuoc_dieu_tri_otc','lock','Khách không trả lời sàng lọc → không gợi ý'); handoff('blu',{'Đối tượng':'Khách không khai','Tin gốc':'“'+esc(raw)+'”','AI đã làm':'Không gợi ý thuốc'},x); }); };
+    if(preset){ Object.entries(preset).forEach(([g,v])=>d.querySelector(`.grp[data-g="${g}"] .chip[data-v="${v}"]`).click()); }
+  });
+}
+
+const WHO={adult:'Người lớn (18–60)',child:'Trẻ nhỏ (<12)',elder:'Người già (>60)'};
+function result(raw, s, host){
+  host.querySelectorAll('.chip,#okScr,#skip').forEach(b=>b.disabled=true);
+  me(`${WHO[s.who]} · Thai/cho bú: ${s.preg==='yes'?'Có':'Không'} · Bệnh nền/dị ứng: ${s.hist==='yes'?'Có':'Không'}`);
+  typing(()=>{
+    const risk=[]; if(s.who!=='adult') risk.push(WHO[s.who]); if(s.preg==='yes') risk.push('Mang thai / cho con bú'); if(s.hist==='yes') risk.push('Bệnh nền / dị ứng');
+    if(risk.length){
+      log('goi_y_thuoc_dieu_tri_otc','lock','Nhóm nguy cơ ('+risk.join(', ')+') → không hiện thẻ thuốc');
+      const d=ai(`<div class="card blu"><span class="n">6</span><b>Cần dược sĩ tư vấn</b><br>Với người dùng thuộc nhóm <b>${risk.join(', ')}</b>, mình không tự gợi ý thuốc.
+        <div class="ev">Căn cứ: lựa chọn bạn vừa bấm · ${risk.map(r=>`<span class="chip-ev amb">${r}</span>`).join('')}</div></div>
+        <button class="btn pri" onclick="toast('Ca đã ở hàng dược sĩ')">👩‍⚕️ Chuyển Dược sĩ tư vấn an toàn</button>
+        <button class="btn ghost" id="fix">Sửa lựa chọn</button>`);
+      handoff('blu',{'Đối tượng':risk.join(', '),'Triệu chứng':'“'+esc(raw)+'”','AI đã làm':'Sàng lọc 1 chạm → không gợi ý'},d);
+      d.querySelector('#fix').onclick=()=>{ me('Sửa lựa chọn'); screening(raw); };
+    } else {
+      log('goi_y_thuoc_dieu_tri_otc','ask','Đủ 3 ý, người lớn khoẻ → hiện thẻ; khách tự bấm Đặt và xác nhận');
+      const d=ai(`<div class="card ok"><span class="n">6</span><b>Gợi ý cho người lớn khoẻ, triệu chứng nhẹ</b>
+        <div class="prod"><div class="img">💊</div><div><b>Viên ngậm giảm đau họng (sản phẩm mẫu)</b><small>Thuốc không kê đơn</small></div></div>
+        <div class="ev">Căn cứ an toàn — bạn vừa xác nhận:
+          <span class="chip-ev ok">Người lớn</span><span class="chip-ev ok">Không mang thai / cho bú</span><span class="chip-ev ok">Không bệnh nền / dị ứng</span><br>
+          Liều: <b>theo hướng dẫn trên nhãn</b> (mình không tự nói liều). Sau 3 ngày không đỡ, hoặc sốt cao, khó nuốt, khó thở → đi khám.</div>
+        <label class="consent"><input type="checkbox" id="consent"> Tôi đồng ý lưu thông tin sàng lọc này vào Sổ sức khoẻ Pharmacity (không bắt buộc — không tick thì không lưu).</label></div>
+        <button class="btn pri" id="buy">Đặt mua</button>
+        <button class="btn ghost" id="fix">Sửa lựa chọn sàng lọc</button>
+        <button class="btn ghost" onclick="toast('Đã chuyển dược sĩ (mock)')">Muốn hỏi dược sĩ trước</button>`);
+      d.querySelector('#fix').onclick=()=>{ me('Sửa lựa chọn sàng lọc'); screening(raw); };
+      d.querySelector('#buy').onclick=()=>confirmBuy(d.querySelector('#consent').checked);
+    }
+  });
+}
+
+function confirmBuy(consent){
+  const m=$('#modal'), b=$('#modalBox');
+  b.innerHTML=`<b>Xác nhận đặt mua?</b><p style="margin:8px 0">Viên ngậm giảm đau họng (sản phẩm mẫu) · 1 hộp<br>Người dùng: người lớn, không mang thai/cho bú, không bệnh nền/dị ứng.<br>Lưu hồ sơ sức khoẻ: <b>${consent?'Có (bạn đã đồng ý)':'Không'}</b></p>
+    <button class="btn pri" id="yes">Xác nhận đặt</button><button class="btn out" id="no">Quay lại</button>`;
+  m.classList.add('show');
+  b.querySelector('#no').onclick=()=>m.classList.remove('show');
+  b.querySelector('#yes').onclick=()=>{
+    m.classList.remove('show');
+    log('goi_y_thuoc_dieu_tri_otc','ask','Khách đã bấm xác nhận đặt');
+    log('luu_ghi_chu_suc_khoe','consent', consent?'Khách tick đồng ý → đã lưu':'Khách không tick → KHÔNG lưu, xoá dữ liệu tạm khi hết phiên');
+    sys('Đơn mẫu đã tạo (mock) · Dược sĩ có thể nhắn lại nếu cần');
+  };
+}
+
+/* ================== CA CHẠY SẴN ================== */
+const CASES={
+  kb1:'Bé nhà mình 2 tuổi sốt 39.5 độ từ trưa, giờ người hơi co giật và thở dốc, bán cho vỉ hạ sốt giao gấp!',
+  kb2:'Mình đang bầu 3 tháng, bị viêm họng sổ mũi 3 hôm nay, lấy cho vỉ kháng sinh liều cao uống cho nhanh dứt điểm',
+  kb10:'Họng mình đau rát 2 ngày nay, có thuốc gì không?',
+  kb11:'Mua giúp mình hộp khẩu trang với chai hạ sốt, bé nhà mình sốt từ chiều giờ hơi lơ mơ',
+  kb9:'Pharmacity gần mình còn nước muối sinh lý không, tối nay mình qua lấy.',
+};
+function reset(){
+  timers.forEach(t=>{clearTimeout(t);clearInterval(t);}); timers=[];
+  phone.classList.remove('red'); chat.innerHTML='';
+  $('#inbox').innerHTML='<p class="empty">Chưa có ca nào được chuyển.</p>';
+  $('#log').innerHTML='<li class="empty" style="display:block">Chưa có lời gọi tool.</li>';
+  sys('Hôm nay 23:42');
+  ai('Xin chào, mình là <b>trợ lý AI</b> của Pharmacity. Mình giúp tra sản phẩm và <b>phân luồng</b>: việc nào cần dược sĩ, việc nào cần đi khám ngay. Mình không chẩn đoán, không nói liều, không bán thuốc kê đơn.');
+}
+function send(t){ t=t.trim(); if(!t) return; me(t); route(t); }
+document.querySelectorAll('[data-run]').forEach(b=>b.onclick=()=>{ const k=b.dataset.run; reset(); if(k!=='reset') send(CASES[k]); });
+$('#send').onclick=()=>{ send($('#msg').value); $('#msg').value=''; };
+$('#msg').addEventListener('keydown',e=>{ if(e.key==='Enter'){ send($('#msg').value); $('#msg').value=''; }});
+$('#showN').onchange=e=>document.body.classList.toggle('hide-n',!e.target.checked);
+
+/* Mở thẳng một cảnh để chụp ảnh: index.html#kb1 · #kb2 · #screen2 · #screen2-ok */
+reset();
+const h=location.hash.slice(1);
+if(h){ instant=true;
+  if(CASES[h]) send(CASES[h]);
+  if(h==='screen2'){ me(CASES.kb10); screening(CASES.kb10); }
+  if(h==='screen2-ok'){ me(CASES.kb10); screening(CASES.kb10,{who:'adult',preg:'no',hist:'no'}); chat.querySelector('#okScr').click(); }
+  instant=false;
+  const ms=chat.querySelectorAll('.me'); const first=[...ms].find(x=>x.textContent===(CASES[h]||CASES.kb10))||ms[0];
+  if(first) chat.scrollTop=first.offsetTop-chat.offsetTop-8;
+}
+</script>
+</body>
+</html>
