@@ -203,7 +203,7 @@ th{color:var(--mut);font-weight:600}
 
 <script>
 /* ================== DỮ LIỆU LUẬT (khớp §1 4 nhánh, §6 danh sách dấu hiệu đỏ) ================== */
-const RED = ['co giật','giật giật','mắt trợn','trợn ngược','khó thở','thở dốc','thở rít','tím môi','tím tái','đau ngực','tức ngực','lơ mơ','li bì','gọi không thưa','ngất','bất tỉnh','đau bụng dữ dội','quằn quại','nôn ra máu','đi ngoài phân đen','phân đen','sưng môi','sưng mặt','méo miệng','liệt','yếu nửa người','quá liều','uống nhầm'];
+const RED = ['co giật','giật giật','mắt trợn','trợn ngược','khó thở','thở dốc','thở rít','tím môi','tím tái','đau ngực','tức ngực','lơ mơ','li bì','gọi không thưa','ngất','bất tỉnh','đau bụng dữ dội','dữ dội','thở không nổi','ngừng thở','lỡ uống','quằn quại','nôn ra máu','đi ngoài phân đen','phân đen','sưng môi','sưng mặt','méo miệng','liệt','yếu nửa người','quá liều','uống nhầm'];
 const ETC = ['kháng sinh','amoxicillin','augmentin','cefuroxim','azithromycin','thuốc huyết áp','thuốc ngủ','corticoid','prednisolon','trợ tim','xuất đơn'];
 const CLAIM = ['tôi là bác sĩ','mình là bác sĩ','tôi là dược sĩ','nhân viên pharmacity'];
 const PREG = ['bầu','mang thai','có thai','cho con bú'];
@@ -213,13 +213,18 @@ const CHRONIC = ['huyết áp','tiểu đường','bệnh nền','dị ứng','h
 const SUPPLY = ['nước muối','nhiệt kế','khẩu trang','bông','băng gạc','gạc','cồn'];
 const STOCK = ['còn hàng','còn không','còn ko','còn nước muối','có sẵn','tồn kho'];
 const DOSE = ['mấy viên','mấy ml','liều','uống bao nhiêu','ngày mấy','mấy lần'];
+const SENSITIVE = ['vùng kín','phụ khoa','nam khoa','khí hư','tiểu buốt','tiểu rắt'];
+const LONG = ['không đỡ','không khỏi','nặng hơn','mạnh hơn'];
+const DRUG = ['thuốc','siro','viên','hạ sốt','giảm đau','panadol','paracetamol'];
+const GRUMPY = ['hỏi lắm','hỏi gì lắm','bán đại','đừng hỏi'];
 
 const $ = s => document.querySelector(s);
 const chat = $('#chat'), phone = $('#phone');
 let instant = false, caseNo = 0, timers = [];
 const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const found = (t, list) => list.filter(k => t.includes(k));
-const now = () => new Date().toTimeString().slice(0,5);
+const T0 = Date.now(); /* giờ dựng: 23:42, chạy theo thời gian thật kể từ lúc mở trang */
+const now = () => { const m = 23*60+42 + Math.floor((Date.now()-T0)/60000); return String(Math.floor(m/60)%24).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
 function ageOf(t){ const m = t.match(/(\d{1,3})\s*tuổi/); return m ? +m[1] : null; }
 
 function later(fn, ms){ if(instant){ fn(); return; } const id = setTimeout(fn, ms); timers.push(id); }
@@ -271,20 +276,57 @@ function addCase(kind, id, s, opts){
   }
 }
 
-/* ================== 4 NHÁNH (thứ tự ưu tiên ở §1) ================== */
+/* Dấu hiệu đỏ không bắt được bằng từ khoá đơn (§6): quá liều, sốt ở trẻ < 3 tháng */
+function redOf(t){
+  const r = found(t, RED);
+  const od = t.match(/uống\s+(?:hết\s+)?(\d+|cả|nguyên)\s*(viên|vỉ|lọ|chai|hộp)/);
+  if(od && (isNaN(+od[1]) || +od[1] >= 6)) r.push(od[0]);
+  const mo = t.match(/(\d+)\s*tháng\s*tuổi/);
+  if(t.includes('sốt') && ((mo && +mo[1] < 3) || t.includes('sơ sinh'))) r.push(mo ? mo[0] : 'sơ sinh', 'sốt');
+  return r;
+}
+function longOf(t){
+  const r = found(t, LONG);
+  const d = t.match(/(\d+)\s*(ngày|hôm)/); if(d && +d[1] >= 7) r.push(d[0]);
+  const w = t.match(/(\d+)\s*tuần/); if(w) r.push(w[0]);
+  return r;
+}
+
+/* ================== 4 NHÁNH (thứ tự ưu tiên ở §1) — hàm thuần, không đụng giao diện ================== */
+function classify(raw){
+  const t = raw.toLowerCase();
+  const red = redOf(t);
+  if(red.length) return ['RED', red.join(',')];                    // nhánh 1 — xét TRƯỚC mọi việc khác
+  const etc = found(t, ETC).concat(found(t, CLAIM));
+  if(etc.length) return ['ETC', etc.join(',')];                    // thuốc kê đơn / danh xưng → cấm, dược sĩ
+  const sens = found(t, SENSITIVE);
+  if(sens.length) return ['SENS', sens.join(',')];                 // bệnh tế nhị → dược sĩ, không lưu
+  const long = longOf(t);
+  if(long.length) return ['LONG', long.join(',')];                 // tự dùng nhiều ngày không đỡ → khám + dược sĩ
+  const sup = found(t, SUPPLY), drug = found(t, DRUG), dose = found(t, DOSE);
+  if(sup.length && !drug.length && !dose.length) return ['SUPPLY', sup.join(',')];
+  const risk = riskOf(t);
+  if(risk.length) return ['RISK', risk.map(x=>x[0]).join(',')];   // nhóm nguy cơ → dược sĩ
+  return ['SCREEN', ''];                                           // chưa rõ người dùng → sàng lọc 1 chạm
+}
+
 function route(raw){
   const t = raw.toLowerCase();
-  const red = found(t, RED);
-  if(red.length) return emergency(raw, red);                      // nhánh 1 — xét TRƯỚC mọi việc khác
-  const etc = found(t, ETC), claim = found(t, CLAIM);
-  if(etc.length || claim.length) return refuseETC(raw, etc, claim); // vùng cấm → dược sĩ
-  const dose = found(t, DOSE);
-  const sup = found(t, SUPPLY);
-  if(sup.length && !dose.length) return supply(raw, sup, found(t, STOCK).length>0);
-  const risk = riskOf(t);
+  const [b] = classify(raw);
+  const grumpy = found(t, GRUMPY).length > 0;
+  if(b==='RED')  return emergency(raw, redOf(t));
+  if(b==='ETC')  return refuseETC(raw, found(t, ETC), found(t, CLAIM));
+  if(b==='SENS') return sensitive(raw, found(t, SENSITIVE));
+  if(b==='LONG') return longCase(raw, longOf(t));
+  const sup = found(t, SUPPLY), dose = found(t, DOSE);
+  if(b==='SUPPLY') return supply(raw, sup, found(t, STOCK).length>0);
+  if(sup.length) supply(raw, sup, found(t, STOCK).length>0, true);  // hai yêu cầu trong một tin: vật tư làm ngay, thuốc đi tiếp
+  if(grumpy) ai(b==='RISK'
+    ? 'Xin lỗi đã làm bạn phải chờ. Mình không bán đại được vì liều cho người nhà bạn phụ thuộc tuổi và cân nặng — dùng sai là hại thật. Để nhanh nhất, mình chuyển thẳng dược sĩ, bạn không phải trả lời thêm câu nào với mình.'
+    : 'Xin lỗi vì phải hỏi thêm. Mình cần biết <b>ai sẽ dùng thuốc</b> vì cùng một thuốc, dùng sai người có thể gây hại — chỉ 3 lần chạm, không phải gõ.');
   if(dose.length) ai(`Mình <b>không tự nói liều</b> — liều phụ thuộc tuổi, cân nặng, thuốc đang dùng mà mình không kiểm chứng được qua chat. Bạn dùng theo hướng dẫn trên nhãn hoặc để dược sĩ tư vấn.`);
-  if(risk.length) return riskGroup(raw, risk);                     // nhóm nguy cơ → dược sĩ
-  return screening(raw);                                           // chưa rõ người dùng → sàng lọc 1 chạm
+  if(b==='RISK') return riskGroup(raw, riskOf(t));
+  return screening(raw);
 }
 
 function riskOf(t){
@@ -302,20 +344,30 @@ function emergency(raw, red){
     phone.classList.add('red');
     log('khuyen_di_kham','auto','Phát hiện dấu hiệu đỏ → hiện cảnh báo + nút 115 ở tin trả lời đầu tiên');
     log('goi_y_san_pham','lock','Không gọi: luồng bán hàng bị khoá khi có dấu hiệu đỏ');
-    const isChild = riskOf(raw.toLowerCase()).some(r=>r[0]==='Trẻ nhỏ');
+    const t = raw.toLowerCase();
+    const isChild = riskOf(t).some(r=>r[0]==='Trẻ nhỏ');
+    const who = isChild ? 'bé' : 'người bệnh';
+    const has = list => red.some(w => list.some(k => w.includes(k)));
+    // Bước sơ cứu đi theo LOẠI dấu hiệu, không dùng một mẫu cho mọi ca
+    let steps;
+    if(has(['co giật','giật giật','trợn'])) steps = `<li>Đặt ${who} nằm nghiêng một bên, nơi thoáng; nới lỏng quần áo${t.includes('sốt')?'; chườm ấm (không dùng nước đá, cồn)':''}.</li><li>Không nhét thuốc hay bất cứ vật gì vào miệng ${who} lúc đang co giật.</li>`;
+    else if(has(['uống nhầm','lỡ uống','quá liều','uống '])) steps = `<li>Không tự gây nôn khi chưa có hướng dẫn của nhân viên y tế.</li><li>Mang theo vỉ, hộp thuốc đã uống khi đi viện.</li>`;
+    else if(has(['sưng môi','sưng mặt'])) steps = `<li>Ngừng ngay thuốc vừa dùng.</li><li>Nếu khó thở, khò khè → gọi 115 ngay, không tự đi xe.</li>`;
+    else steps = `<li>Không tự dùng thêm thuốc trong lúc chờ; để ${who} ngồi hoặc nằm nghỉ, không gắng sức.</li>`;
+    const place = isChild ? 'khoa Cấp cứu / Bệnh viện Nhi' : 'khoa Cấp cứu / bệnh viện';
     const d = ai(`
       <div class="banner">
         <div class="t"><span class="n">1</span>🚨 CẢNH BÁO Y TẾ KHẨN CẤP — CẦN ĐI KHÁM NGAY</div>
-        <div style="margin-top:4px">${isChild?'Sốt cao kèm co giật hoặc khó thở ở trẻ nhỏ':'Dấu hiệu bạn mô tả'} là tình trạng nguy hiểm, cần can thiệp y tế ngay — <b>không chờ giao thuốc</b>.</div>
+        <div style="margin-top:4px">Dấu hiệu bạn mô tả${isChild?' ở trẻ nhỏ':''} có thể nguy hiểm, cần can thiệp y tế ngay — <b>không chờ giao thuốc</b>.</div>
         <div style="margin-top:8px;font-weight:700">🚑 Làm ngay bây giờ:</div>
         <ol>
-          <li>Gọi <b>Cấp cứu 115</b> hoặc đưa ${isChild?'bé':'người bệnh'} đến khoa Cấp cứu gần nhất.</li>
-          ${isChild?'<li>Đặt bé nằm nghiêng một bên, nơi thoáng; nới lỏng quần áo; chườm ấm (không dùng nước đá, cồn).</li><li>Không nhét thuốc hay bất cứ vật gì vào miệng bé lúc đang co giật.</li>':'<li>Không tự uống thêm thuốc trong lúc chờ; ngồi hoặc nằm nghỉ, không gắng sức.</li>'}
+          <li>Gọi <b>Cấp cứu 115</b> hoặc đưa ${who} đến ${place} gần nhất.</li>
+          ${steps}
         </ol>
-        <div class="ev">Căn cứ mình dựa vào — từ khoá nguy hiểm trong tin của bạn:<br>“${highlight(raw, red)}”</div>
+        <div class="ev">Căn cứ mình dựa vào — dấu hiệu nguy hiểm trong tin của bạn:<br>“${highlight(raw, red)}”</div>
       </div>
       <a class="btn red" href="tel:115" onclick="log('—','auto','Khách bấm Gọi 115 (mở trình quay số)')"><span class="n">2</span>📞 BẤM GỌI CẤP CỨU 115 NGAY</a>
-      <button class="btn out" onclick="toast('Mở bản đồ: khoa Cấp cứu / Bệnh viện Nhi gần nhất (mock)')"><span class="n">3</span>🏥 Tìm khoa Cấp cứu / Bệnh viện Nhi gần nhất</button>
+      <button class="btn out" onclick="toast('Mở bản đồ: ${place} gần nhất (mock)')"><span class="n">3</span>🏥 Tìm ${place} gần nhất</button>
       <button class="btn ghost" id="oops">Tôi gõ nhầm, không có dấu hiệu này</button>
       <div class="ev">Mình là trợ lý AI, không thay bác sĩ cấp cứu. Cuộc chat được chuyển song song cho dược sĩ — nhưng <b>đừng chờ tin nhắn</b>, hãy gọi 115 trước.</div>`);
     handoff('red', {
@@ -339,13 +391,16 @@ function refuseETC(raw, etc, claim){
   typing(()=>{
     const t=raw.toLowerCase(); const risk=riskOf(t);
     const preg = risk.find(r=>r[0].startsWith('Mang thai'));
+    const long = longOf(t);
     log('ban_thuoc_ke_don','no','Yêu cầu bị chặn ở tầng API — không có nút bán trên giao diện');
-    if(preg) log('goi_y_san_pham','lock','Không gợi ý thuốc "thay thế an toàn cho bà bầu" — để dược sĩ tư vấn');
-    log('luu_ghi_chu_suc_khoe','consent','Không gọi: khách chưa đồng ý lưu thông tin thai kỳ');
-    const words = [...etc, ...claim, ...(preg?preg[1]:[])];
+    log('goi_y_thuoc_dieu_tri_otc','lock','Không gợi ý thuốc "thay thế" cho thuốc kê đơn — để dược sĩ tư vấn');
+    if(risk.length) log('luu_ghi_chu_suc_khoe','consent','Không gọi: khách chưa đồng ý lưu thông tin sức khoẻ');
+    const words = [...etc, ...claim, ...(preg?preg[1]:[]), ...long];
+    const abx = preg && etc.includes('kháng sinh');
     const d = ai(`
       <div class="card amb">
-        <div class="t">⚠️ ${preg?'Không bán kháng sinh không đơn — bảo vệ an toàn thai kỳ':'Không bán thuốc kê đơn qua chat'}</div>
+        <div class="t">⚠️ ${abx?'Không bán kháng sinh không đơn — bảo vệ an toàn thai kỳ':'Không bán thuốc kê đơn qua chat'}</div>
+        ${long.length?'<div style="margin-top:4px"><b>Đã dùng thuốc nhiều ngày mà không đỡ thì cần đi khám</b>, không đổi sang thuốc "mạnh hơn".</div>':''}
         <div style="margin-top:4px">Trợ lý AI của Pharmacity <b>không thể bán ${etc.length?'thuốc kê đơn':'thuốc theo yêu cầu này'}</b> khi chưa có đơn hợp lệ của bác sĩ${preg?', nhất là khi bạn đang mang thai — giai đoạn nhạy cảm với thai nhi':''}. Mình cũng <b>không gợi ý thuốc nào "thay thế"</b>.</div>
         ${claim.length?'<div style="margin-top:4px">Danh xưng gửi trong chat là thông tin, không phải quyền — mình không xác thực được nên không mở luồng bán.</div>':''}
         <div class="ev">Căn cứ: “${highlight(raw, words, 'amb')}”<br>
@@ -380,11 +435,35 @@ function riskGroup(raw, risk){
   });
 }
 
+/* ---------- Bệnh tế nhị (KB8): dược sĩ, không lưu ---------- */
+function sensitive(raw, words){
+  typing(()=>{
+    log('goi_y_thuoc_dieu_tri_otc','lock','Triệu chứng vùng kín cần khám để biết nguyên nhân → không tự gợi ý thuốc bôi');
+    log('luu_ghi_chu_suc_khoe','consent','KHÔNG lưu: dữ liệu nhạy cảm, khách chưa đồng ý');
+    const d = ai(`Mình hiểu đây là chuyện riêng tư. Triệu chứng này có nhiều nguyên nhân khác nhau và cần khám để biết đúng, nên mình <b>không tự gợi ý thuốc bôi</b> — dùng sai loại có thể làm nặng thêm.
+      <div class="ev">Căn cứ: “${highlight(raw, words, 'amb')}”<br><span class="chip-ev amb">Cần khám / dược sĩ tư vấn</span></div>
+      <div class="card blu">🔒 Mình <b>không lưu</b> nội dung này vào hồ sơ của bạn. Dược sĩ chỉ thấy phần tóm tắt trong cuộc chat này.</div>`);
+    handoff('blu', {'Chủ đề':'Tế nhị (không lưu hồ sơ)', 'Tin gốc':'“'+esc(raw)+'”', 'AI đã làm':'Không gợi ý thuốc · không lưu'}, d);
+  });
+}
+
+/* ---------- Tự dùng thuốc nhiều ngày không đỡ (KB6, L9) ---------- */
+function longCase(raw, words){
+  typing(()=>{
+    log('goi_y_thuoc_dieu_tri_otc','lock','Đã tự dùng thuốc không đỡ → không bán "loại mạnh hơn"');
+    const d = ai(`Đã dùng thuốc mà <b>không đỡ</b> thì nên <b>đi khám</b> để tìm nguyên nhân — mình không gợi ý loại "mạnh hơn", vì đổi thuốc có thể che triệu chứng.
+      <div class="ev">Căn cứ: “${highlight(raw, words, 'amb')}”<br><span class="chip-ev amb">Tự dùng thuốc không đỡ</span></div>
+      <div style="margin-top:6px">Nếu có <b>khó thở, sốt cao không hạ, lơ mơ</b> → gọi 115 ngay.</div>
+      <a class="btn out" href="tel:115">📞 Có dấu hiệu nguy hiểm → Gọi 115</a>`);
+    handoff('amb', {'Tình trạng':'Tự dùng thuốc không đỡ', 'Tin gốc':'“'+esc(raw)+'”', 'AI đã làm':'Khuyên đi khám · không gợi ý thuốc'}, d);
+  });
+}
+
 /* ---------- Vật tư / tồn kho (KB9, KB12) ---------- */
-function supply(raw, sup, askStock){
+function supply(raw, sup, askStock, also){
   typing(()=>{
     log('goi_y_vat_tu_y_te','auto','Gợi ý vật tư không phải thuốc — không cần sàng lọc');
-    ai(`${askStock?'Mình <b>không xem được tồn kho từng cửa hàng</b> (mình không có dữ liệu này), nên không dám nói "còn hàng". Bạn có thể đặt giao tận nơi, hoặc gọi cửa hàng trước khi qua.<br>':''}
+    ai(`${also?'Phần <b>vật tư</b> mình gợi ý ngay; phần <b>thuốc</b> mình cần hỏi thêm ở tin tiếp theo.<br>':''}${askStock?'Mình <b>không xem được tồn kho từng cửa hàng</b> (mình không có dữ liệu này), nên không dám nói "còn hàng". Bạn có thể đặt giao tận nơi, hoặc gọi cửa hàng trước khi qua.<br>':''}
       <div class="prod"><div class="img">🧴</div><div><b>${sup[0][0].toUpperCase()+sup[0].slice(1)} (sản phẩm mẫu)</b><small>Vật tư y tế · không phải thuốc · không cần sàng lọc</small></div></div>
       <button class="btn pri" onclick="toast('Thêm vào giỏ (mock) — khách tự bấm đặt')">Đặt giao tận nơi</button>
       ${askStock?'<button class="btn out" onclick="toast(\'Danh sách cửa hàng gần bạn + số điện thoại (mock)\')">📍 Xem cửa hàng gần nhất để gọi hỏi</button>':''}`);
@@ -419,6 +498,15 @@ function screening(raw, preset){
 }
 
 const WHO={adult:'Người lớn (18–60)',child:'Trẻ nhỏ (<12)',elder:'Người già (>60)'};
+/* Sản phẩm mẫu đi theo triệu chứng khách nhắn, không dùng một thẻ cho mọi ca */
+function productFor(raw){
+  const t=raw.toLowerCase();
+  if(/họng/.test(t)) return ['Viên ngậm giảm đau họng (sản phẩm mẫu)','💊'];
+  if(/sốt|đau đầu|nhức đầu|panadol|paracetamol|giảm đau/.test(t)) return ['Thuốc hạ sốt, giảm đau (sản phẩm mẫu)','💊'];
+  if(/ho|siro/.test(t)) return ['Siro ho (sản phẩm mẫu)','🧴'];
+  if(/sổ mũi|nghẹt mũi|cảm/.test(t)) return ['Thuốc cảm, sổ mũi (sản phẩm mẫu)','💊'];
+  return ['Sản phẩm phù hợp triệu chứng (sản phẩm mẫu)','💊'];
+}
 function result(raw, s, host){
   host.querySelectorAll('.chip,#okScr,#skip').forEach(b=>b.disabled=true);
   me(`${WHO[s.who]} · Thai/cho bú: ${s.preg==='yes'?'Có':'Không'} · Bệnh nền/dị ứng: ${s.hist==='yes'?'Có':'Không'}`);
@@ -433,25 +521,27 @@ function result(raw, s, host){
       handoff('blu',{'Đối tượng':risk.join(', '),'Triệu chứng':'“'+esc(raw)+'”','AI đã làm':'Sàng lọc 1 chạm → không gợi ý'},d);
       d.querySelector('#fix').onclick=()=>{ me('Sửa lựa chọn'); screening(raw); };
     } else {
+      const prod=productFor(raw);
       log('goi_y_thuoc_dieu_tri_otc','ask','Đủ 3 ý, người lớn khoẻ → hiện thẻ; khách tự bấm Đặt và xác nhận');
       const d=ai(`<div class="card ok"><span class="n">6</span><b>Gợi ý cho người lớn khoẻ, triệu chứng nhẹ</b>
-        <div class="prod"><div class="img">💊</div><div><b>Viên ngậm giảm đau họng (sản phẩm mẫu)</b><small>Thuốc không kê đơn</small></div></div>
+        <div class="prod"><div class="img">${prod[1]}</div><div><b>${prod[0]}</b><small>Thuốc không kê đơn</small></div></div>
         <div class="ev">Căn cứ an toàn — bạn vừa xác nhận:
           <span class="chip-ev ok">Người lớn</span><span class="chip-ev ok">Không mang thai / cho bú</span><span class="chip-ev ok">Không bệnh nền / dị ứng</span><br>
           Liều: <b>theo hướng dẫn trên nhãn</b> (mình không tự nói liều). Sau 3 ngày không đỡ, hoặc sốt cao, khó nuốt, khó thở → đi khám.</div>
         <label class="consent"><input type="checkbox" id="consent"> Tôi đồng ý lưu thông tin sàng lọc này vào Sổ sức khoẻ Pharmacity (không bắt buộc — không tick thì không lưu).</label></div>
         <button class="btn pri" id="buy">Đặt mua</button>
         <button class="btn ghost" id="fix">Sửa lựa chọn sàng lọc</button>
-        <button class="btn ghost" onclick="toast('Đã chuyển dược sĩ (mock)')">Muốn hỏi dược sĩ trước</button>`);
+        <button class="btn ghost" id="askPh">Muốn hỏi dược sĩ trước</button>`);
+      d.querySelector('#askPh').onclick=()=>{ me('Muốn hỏi dược sĩ trước'); typing(()=>{ const x=ai('Được, mình chuyển dược sĩ kèm thông tin bạn vừa chọn — bạn không cần kể lại.'); handoff('blu',{'Đối tượng':'Người lớn khoẻ (đã sàng lọc)','Triệu chứng':'“'+esc(raw)+'”','AI đã làm':'Đã gợi ý '+prod[0]+' · khách muốn hỏi thêm'},x); }); };
       d.querySelector('#fix').onclick=()=>{ me('Sửa lựa chọn sàng lọc'); screening(raw); };
-      d.querySelector('#buy').onclick=()=>confirmBuy(d.querySelector('#consent').checked);
+      d.querySelector('#buy').onclick=()=>confirmBuy(d.querySelector('#consent').checked, prod[0]);
     }
   });
 }
 
-function confirmBuy(consent){
+function confirmBuy(consent, name){
   const m=$('#modal'), b=$('#modalBox');
-  b.innerHTML=`<b>Xác nhận đặt mua?</b><p style="margin:8px 0">Viên ngậm giảm đau họng (sản phẩm mẫu) · 1 hộp<br>Người dùng: người lớn, không mang thai/cho bú, không bệnh nền/dị ứng.<br>Lưu hồ sơ sức khoẻ: <b>${consent?'Có (bạn đã đồng ý)':'Không'}</b></p>
+  b.innerHTML=`<b>Xác nhận đặt mua?</b><p style="margin:8px 0">${name} · 1 hộp<br>Người dùng: người lớn, không mang thai/cho bú, không bệnh nền/dị ứng.<br>Lưu hồ sơ sức khoẻ: <b>${consent?'Có (bạn đã đồng ý)':'Không'}</b></p>
     <button class="btn pri" id="yes">Xác nhận đặt</button><button class="btn out" id="no">Quay lại</button>`;
   m.classList.add('show');
   b.querySelector('#no').onclick=()=>m.classList.remove('show');
@@ -490,10 +580,11 @@ reset();
 const h=location.hash.slice(1);
 if(h){ instant=true;
   if(CASES[h]) send(CASES[h]);
+  if(h.startsWith('q=')) send(decodeURIComponent(h.slice(2)));
   if(h==='screen2'){ me(CASES.kb10); screening(CASES.kb10); }
   if(h==='screen2-ok'){ me(CASES.kb10); screening(CASES.kb10,{who:'adult',preg:'no',hist:'no'}); chat.querySelector('#okScr').click(); }
   instant=false;
-  const ms=chat.querySelectorAll('.me'); const first=[...ms].find(x=>x.textContent===(CASES[h]||CASES.kb10))||ms[0];
+  const ms=chat.querySelectorAll('.me'); const first=ms[ms.length-1] && h.startsWith('q=') ? ms[0] : ([...ms].find(x=>x.textContent===(CASES[h]||CASES.kb10))||ms[0]);
   if(first) chat.scrollTop=first.offsetTop-chat.offsetTop-8;
 }
 </script>

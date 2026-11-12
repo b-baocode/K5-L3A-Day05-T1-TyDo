@@ -18,7 +18,25 @@
 
 Có thể **gõ một ca lạ** vào ô chat để thử phân luồng ngay khi demo.
 
-**Mở thẳng một cảnh** (để chụp ảnh): `index.html#kb1`, `#kb2`, `#screen2`, `#screen2-ok`.
+**Mở thẳng một cảnh** (để chụp ảnh): `index.html#kb1`, `#kb2`, `#screen2`, `#screen2-ok`, hoặc `#q=<tin nhắn>` để chạy một tin bất kỳ.
+
+## Luật phân luồng (hàm `classify()` trong `index.html`)
+
+Xét theo thứ tự, gặp nhánh nào thì dừng ở nhánh đó:
+
+1. **Dấu hiệu đỏ** (danh sách ở §6, gồm cả quá liều như "uống 10 viên", "uống cả vỉ", và sốt ở trẻ dưới 3 tháng) → cảnh báo đỏ và nút 115. Bước sơ cứu thay đổi theo loại dấu hiệu: co giật, ngộ độc, dị ứng, hay loại khác.
+2. **Thuốc kê đơn hoặc danh xưng tự khai** ("tôi là bác sĩ", "nhân viên Pharmacity") → từ chối, không gợi ý thuốc thay thế, chuyển dược sĩ.
+3. **Bệnh tế nhị** → chuyển dược sĩ, **không lưu** hồ sơ.
+4. **Đã tự dùng thuốc mà không đỡ** (≥ 7 ngày, "không đỡ", "mạnh hơn") → khuyên đi khám và chuyển dược sĩ.
+5. **Chỉ hỏi vật tư** → gợi ý ngay. Nếu hỏi tồn kho, AI nói rõ là không có dữ liệu tồn kho.
+6. **Nhóm nguy cơ** đã lộ ra trong tin (trẻ nhỏ, người cao tuổi, mang thai hoặc cho con bú, bệnh nền) → chuyển dược sĩ.
+7. **Còn lại** → sàng lọc 1 chạm.
+
+Bộ kiểm thử 39 ca (12 kịch bản ở §2, các ca lạ ở §7, và các ca dễ nhận nhầm) đều ra đúng nhánh.
+
+**Giới hạn đã biết:**
+- Luật dựa trên từ khoá, nên một cách diễn đạt lạ vẫn có thể lọt. Đây là lỗi còn lại số 1 ở §6.
+- Câu phủ định như "bé **không** co giật" vẫn ra cảnh báo đỏ. Nhóm chấp nhận vì cảnh báo thừa rẻ hơn bỏ sót.
 
 ## Ảnh đánh số
 
