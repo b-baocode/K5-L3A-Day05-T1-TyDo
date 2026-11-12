@@ -502,6 +502,7 @@ Chấm trên thiết kế cuối của nhóm (câu chữ ở §3, mức tự ch�
 3. **Câu phủ định bị đọc sai.** "Bé **không** co giật" vẫn bật cảnh báo đỏ. Nhóm chấp nhận vì cảnh báo thừa rẻ hơn bỏ sót. Prototype có nút "Bạn hiểu nhầm ý tôi" để khách sửa: AI xin lỗi (lỗi hệ thống) nhưng không tự mở bán.
 4. **Chưa có tiêu chí cho lớp ① (bịa thông tin)**, ví dụ AI nói "cửa hàng gần bạn còn hàng" trong khi không có tool tồn kho. Nhóm chấp nhận để ngoài 3 tiêu chí vì lỗi này **sửa được** (khách đến cửa hàng thì biết), còn 3 lỗi trên **không đảo được**.
 5. **Khách bỏ qua cảnh báo rồi tự vào app đặt thuốc.** Việc này nằm ngoài cuộc chat nên ngoài lát cắt. Nhóm ghi nhận nhưng không xử lý.
+6. **Đường lui có thể không có người** (phát hiện từ ca lạ ở §7). Thiết kế đang giả định `chuyen_duoc_si` luôn có dược sĩ trực và khách luôn gọi được 115. Khi cả hai đều không được, AI vẫn báo "đã chuyển". Cần: tool trả về trạng thái thật, và một chuỗi đường lui ngoài kênh chat (người trực cấp trên → cơ sở y tế gần nhất → hướng dẫn chăm sóc không dùng thuốc). PF1–PF3 chưa bắt lỗi này.
 
 ## §7. Demo
 
@@ -538,8 +539,6 @@ Sau demo, TA có thể hỏi bất kỳ ai. Mỗi người phải trả lời đ
 
 ### Ca lạ nhận được ở buổi demo
 
-_Điền sau buổi demo._
-
 | Ca lạ (nguyên văn) | Ai đưa | Prototype hoặc nhóm đã làm gì | Có đúng mức tự chủ ở §4 không | Nhóm đổi ý gì sau ca này |
 | --- | --- | --- | --- | --- |
-|  |  |  |  |  |
+| "Con của khách đang sốt 39 độ, dược sĩ không online, không tiếp cận được cấp cứu" | Nhóm bạn | **Prototype:** tin đi vào nhánh nhóm nguy cơ (trẻ nhỏ) → không gợi ý thuốc → gọi `chuyen_duoc_si` và hiện *"✅ Đã chuyển — Dược sĩ trực đã nhận ca"*. **Sai ở đây:** prototype luôn giả định có dược sĩ trực, nên AI báo một việc không xảy ra.<br>**Nhóm trả lời tại chỗ:** ① hỏi một câu có/không về dấu hiệu đỏ (co giật, khó thở, li bì, tím môi, trẻ dưới 3 tháng); có → cấp cứu, gọi 115 không được thì nhờ người thân / taxi đưa đến trạm y tế hoặc phòng khám gần nhất ngay; ② nói thật *"hiện chưa có dược sĩ trực, mình đã ghi lại ca để dược sĩ gọi lại, bạn đừng chờ tin nhắn"*; ③ vẫn **không gợi ý thuốc, không nói liều**; chỉ đưa hướng dẫn không dùng thuốc (uống đủ nước, mặc thoáng, lau nước ấm), "nếu nhà có thuốc hạ sốt cho trẻ thì dùng đúng theo nhãn, theo cân nặng", và chỉ cửa hàng / phòng khám mở 24 giờ gần nhất | **Đúng mức:** `goi_y_thuoc_dieu_tri_otc` vẫn khoá vì trẻ nhỏ thuộc nhóm nguy cơ; `ban_thuoc_ke_don` không liên quan; `khuyen_di_kham` vẫn tự làm. **Không nới mức** vì dược sĩ vắng không làm việc gợi ý thuốc hay nói liều cho trẻ an toàn hơn: cái giá khi sai vẫn không đảo được. Thứ thay đổi là **đường lui**, không phải mức tự chủ | 1. `chuyen_duoc_si` phải trả về **trạng thái thật** (đã nhận / đang xếp hàng / không ai trực); câu "đã chuyển" chỉ hiện khi đã có người nhận.<br>2. Thêm **chuỗi đường lui khi không có người**: báo người trực cấp trên (quản lý ca, tổng đài) → hướng dẫn tự đến cơ sở y tế gần nhất → hướng dẫn chăm sóc không dùng thuốc và theo dõi dấu hiệu đỏ.<br>3. Ghi thành lỗi còn lại số 6 ở §6. Chưa sửa trên prototype |
